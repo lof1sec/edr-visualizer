@@ -10,7 +10,17 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+// Set a higher payload limit for saving large graph states
+app.use(express.json({ limit: '50mb' }));
+
+// Utility to safely resolve and validate file paths to prevent directory traversal
+const getSafeFilePath = (dir, filename) => {
+  const safePath = path.normalize(path.join(dir, filename));
+  if (!safePath.startsWith(dir)) {
+    throw new Error('Invalid path');
+  }
+  return safePath;
+};
 
 // Set up Multer for file uploads
 const storage = multer.diskStorage({
@@ -92,33 +102,41 @@ app.get('/api/files', (req, res) => {
 
 // 3. Endpoint to stream a specific file's content
 app.get('/api/files/:filename', (req, res) => {
-  const filename = req.params.filename;
-  const filePath = path.join(convertedDir, filename);
+  try {
+    const filename = req.params.filename;
+    const filePath = getSafeFilePath(convertedDir, filename);
 
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: 'File not found' });
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    res.setHeader('Content-Type', 'application/jsonx'); // or text/plain
+    const readStream = fs.createReadStream(filePath, { encoding: 'utf-8' });
+    readStream.pipe(res);
+  } catch (err) {
+    res.status(400).json({ error: 'Invalid file request' });
   }
-
-  res.setHeader('Content-Type', 'application/jsonx'); // or text/plain
-  const readStream = fs.createReadStream(filePath, { encoding: 'utf-8' });
-  readStream.pipe(res);
 });
 
 // 4. Endpoint to delete a file
 app.delete('/api/files/:filename', (req, res) => {
-  const filename = req.params.filename;
-  const filePath = path.join(convertedDir, filename);
+  try {
+    const filename = req.params.filename;
+    const filePath = getSafeFilePath(convertedDir, filename);
 
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: 'File not found' });
-  }
-
-  fs.unlink(filePath, (err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Unable to delete file' });
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found' });
     }
-    res.json({ message: 'File deleted successfully' });
-  });
+
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Unable to delete file' });
+      }
+      res.json({ message: 'File deleted successfully' });
+    });
+  } catch (err) {
+    res.status(400).json({ error: 'Invalid file request' });
+  }
 });
 
 // 5. In-memory storage for session state (for simplicity, could use a db)

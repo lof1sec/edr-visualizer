@@ -3,6 +3,7 @@
 export const parseEDRLogs = (logs) => {
   const nodes = {};
   const edges = [];
+  const edgeSet = new Set();
 
   logs.forEach((log, index) => {
     // Determine type by checking for characteristic fields
@@ -56,9 +57,9 @@ export const parseEDRLogs = (logs) => {
     // Create edge if parentId exists and is not the same as nodeId (avoid self loops)
     if (parentId && String(parentId) !== String(nodeId)) {
       const edgeId = `${parentId}-${nodeId}`;
-      const edgeExists = edges.some(e => e.data.id === edgeId);
-
-      if (!edgeExists) {
+      // Instead of an O(N^2) array lookup via some(), we'll use a Set for O(1) deduplication
+      if (!edgeSet.has(edgeId)) {
+        edgeSet.add(edgeId);
         edges.push({
           data: {
             id: edgeId,
