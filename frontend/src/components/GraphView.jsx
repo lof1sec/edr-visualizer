@@ -1,21 +1,40 @@
 import React, { useRef, useEffect, useState } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
 import cytoscape from 'cytoscape';
-import dagre from 'cytoscape-dagre';
+import coseBilkent from 'cytoscape-cose-bilkent';
 import { useTheme } from '../context/ThemeContext';
 
-cytoscape.use(dagre);
+cytoscape.use(coseBilkent);
 
 export default function GraphView({ elements, onNodeClick, searchQuery }) {
   const { isDarkMode } = useTheme();
   const cyRef = useRef(null);
 
+  // Physics-based physics layout config
+  const coseLayoutConfig = {
+    name: 'cose-bilkent',
+    animate: 'end',
+    animationEasing: 'ease-out',
+    animationDuration: 1000,
+    randomize: true,
+    nodeRepulsion: 4500,
+    idealEdgeLength: 100,
+    edgeElasticity: 0.45,
+    nestingFactor: 0.1,
+    gravity: 0.25,
+    numIter: 2500,
+    tile: true,
+    tilingPaddingVertical: 10,
+    tilingPaddingHorizontal: 10,
+    gravityRangeCompound: 1.5,
+    gravityCompound: 1.0,
+    gravityRange: 3.8
+  };
+
   // If elements have pre-saved positions (from App.jsx), we should use 'preset' layout
-  // otherwise, default to 'dagre'
+  // otherwise, default to 'cose-bilkent' for physics
   const hasPositions = elements.some(el => el.position);
-  const defaultLayout = hasPositions
-    ? { name: 'preset' }
-    : { name: 'dagre', rankDir: 'TB', spacingFactor: 1.5 };
+  const defaultLayout = hasPositions ? { name: 'preset' } : coseLayoutConfig;
 
   const [layout, setLayout] = useState(defaultLayout);
 
@@ -25,7 +44,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
     if (newHasPositions) {
        setLayout({ name: 'preset' });
     } else {
-       setLayout({ name: 'dagre', rankDir: 'TB', spacingFactor: 1.5 });
+       setLayout(coseLayoutConfig);
     }
   }, [elements]);
 
@@ -189,7 +208,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
           // Assign to a global or window ref so App can read positions if it wasn't passed via props
           window.cyInstance = cy;
         }}
-        wheelSensitivity={0.1}
+        wheelSensitivity={0.5}
         minZoom={0.1}
         maxZoom={5}
       />
@@ -205,7 +224,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
         </button>
         <button
           onClick={() => {
-             const newLayout = layout.name === 'dagre' ? { name: 'breadthfirst', directed: true } : { name: 'dagre', rankDir: 'TB' };
+             const newLayout = layout.name === 'cose-bilkent' ? { name: 'breadthfirst', directed: true, spacingFactor: 1.5 } : coseLayoutConfig;
              setLayout(newLayout);
              if (cyRef.current) cyRef.current.layout(newLayout).run();
           }}
