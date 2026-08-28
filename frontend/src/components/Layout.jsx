@@ -1,27 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
-export default function Layout({ sidebar, main, rightPanel, forceRightOpen }) {
+export default function Layout({ sidebar, main, rightPanel }) {
   const { isDarkMode, toggleTheme } = useTheme();
-
-  // Use refs for the panels to control collapse programmatically
-  const leftPanelRef = useRef(null);
-  const rightPanelRef = useRef(null);
-
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(false);
-
-  // Auto-open right panel if new data is selected
-  useEffect(() => {
-    if (forceRightOpen) {
-      setRightOpen(true);
-      if (rightPanelRef.current) {
-        rightPanelRef.current.expand();
-      }
-    }
-  }, [forceRightOpen]);
 
   return (
     <div className="flex h-screen w-full bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 overflow-hidden font-sans">

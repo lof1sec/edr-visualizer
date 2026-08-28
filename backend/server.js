@@ -16,7 +16,7 @@ app.use(express.json({ limit: '50mb' }));
 // Utility to safely resolve and validate file paths to prevent directory traversal
 const getSafeFilePath = (dir, filename) => {
   const safePath = path.normalize(path.join(dir, filename));
-  if (!safePath.startsWith(dir)) {
+  if (!safePath.startsWith(dir + path.sep)) {
     throw new Error('Invalid path');
   }
   return safePath;
