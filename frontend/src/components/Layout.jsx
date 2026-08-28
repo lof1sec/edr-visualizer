@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from 'lucide-react';
-import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 export default function Layout({ sidebar, main, rightPanel, forceRightOpen }) {
   const { isDarkMode, toggleTheme } = useTheme();
@@ -50,8 +50,8 @@ export default function Layout({ sidebar, main, rightPanel, forceRightOpen }) {
             ref={leftPanelRef}
             collapsible={false}
             defaultSize={20}
-            minSize={15}
-            maxSize={30}
+            minSize={10}
+            maxSize={60}
             className="h-full bg-white dark:bg-gray-800 z-40 overflow-y-auto"
           >
             <div className="p-4 h-full">
@@ -73,8 +73,8 @@ export default function Layout({ sidebar, main, rightPanel, forceRightOpen }) {
             ref={rightPanelRef}
             collapsible={false}
             defaultSize={25}
-            minSize={20}
-            maxSize={40}
+            minSize={10}
+            maxSize={60}
             className="h-full bg-white dark:bg-gray-800 z-40 overflow-y-auto shadow-lg"
           >
             <div className="p-4 h-full">
