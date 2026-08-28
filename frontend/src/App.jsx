@@ -99,6 +99,7 @@ function App() {
   return (
     <ThemeProvider>
       <Layout
+        forceRightOpen={!!selectedNodeData}
         sidebar={
           <Sidebar
             onSelectFile={setSelectedFile}

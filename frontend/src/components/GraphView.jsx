@@ -208,7 +208,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
           // Assign to a global or window ref so App can read positions if it wasn't passed via props
           window.cyInstance = cy;
         }}
-        wheelSensitivity={0.5}
+        wheelSensitivity={1.5}
         minZoom={0.1}
         maxZoom={5}
       />
