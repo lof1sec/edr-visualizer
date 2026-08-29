@@ -29,7 +29,6 @@ export default function Layout({ sidebar, main, rightPanel }) {
         <PanelGroup direction="horizontal">
           {/* Sidebar */}
           <Panel
-            ref={leftPanelRef}
             collapsible={false}
             defaultSize={20}
             minSize={10}
@@ -52,7 +51,6 @@ export default function Layout({ sidebar, main, rightPanel }) {
 
           {/* Right Panel */}
           <Panel
-            ref={rightPanelRef}
             collapsible={false}
             defaultSize={25}
             minSize={10}
