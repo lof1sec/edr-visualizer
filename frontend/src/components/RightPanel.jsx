@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 
-export default function RightPanel({ nodeData, rawLogs, onClose }) {
+export default function RightPanel({ nodeData, rawLogs, onClose, onGlobalSearchSelect }) {
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Local search states for global summary lists
+  const [userSearch, setUserSearch] = useState('');
+  const [eventSearch, setEventSearch] = useState('');
+  const [processSearch, setProcessSearch] = useState('');
 
   if (!nodeData) {
     if (!rawLogs || rawLogs.length === 0) {
@@ -30,11 +35,11 @@ export default function RightPanel({ nodeData, rawLogs, onClose }) {
       }
 
       // Process
-      const isCrowdStrike = log.hasOwnProperty('TargetProcessId');
+      const isCrowdStrike = log.hasOwnProperty('#event_simpleName');
 
       let pid, procName;
       if (isCrowdStrike) {
-        pid = log.TargetProcessId;
+        pid = log.TargetProcessId || log.ContextProcessId || log.SourceProcessId || log.ParentProcessId;
         procName = log.FileName || log.ImageFileName || "Unknown Process";
       } else {
         pid = log.InitiatingProcessId;
@@ -56,45 +61,105 @@ export default function RightPanel({ nodeData, rawLogs, onClose }) {
     const eventTypeList = Array.from(eventTypes).sort();
     const processList = Array.from(processes.entries()).map(([pid, name]) => ({ pid, name })).sort((a, b) => a.name.localeCompare(b.name));
 
+    const filteredUsers = userList.filter(u => u.toLowerCase().includes(userSearch.toLowerCase()));
+    const filteredEvents = eventTypeList.filter(e => e.toLowerCase().includes(eventSearch.toLowerCase()));
+    const filteredProcesses = processList.filter(p => p.name.toLowerCase().includes(processSearch.toLowerCase()) || p.pid.includes(processSearch));
+
     return (
       <div className="flex flex-col h-full gap-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-y-auto">
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 border-b border-gray-300 dark:border-gray-700 pb-2">
           Global Log Summary
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 italic mb-2">
-          Select a node in the graph to view its specific details.
+          Select a node in the graph to view its specific details. Click an item to filter the graph.
         </p>
 
         <div className="space-y-4">
+          {/* Users List */}
           <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
             <h3 className="text-sm font-bold mb-2 text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-              Users ({userList.length})
+              Users ({filteredUsers.length}/{userList.length})
             </h3>
-            <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1 list-disc list-inside">
-              {userList.length > 0 ? userList.map(u => <li key={u} className="break-all">{u}</li>) : <li>None found</li>}
+            <div className="relative mb-2">
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                className="w-full pl-7 pr-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <Search size={12} className="absolute left-2 top-2 text-gray-400" />
+            </div>
+            <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1 max-h-40 overflow-y-auto pr-1">
+              {filteredUsers.length > 0 ? filteredUsers.map(u => (
+                <li
+                  key={u}
+                  onClick={() => onGlobalSearchSelect && onGlobalSearchSelect(u)}
+                  className="break-all cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 px-1 rounded transition-colors"
+                  title="Click to filter graph"
+                >
+                  • {u}
+                </li>
+              )) : <li className="text-gray-400 italic px-1">No matches</li>}
             </ul>
           </div>
 
+          {/* Event Types List */}
           <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
             <h3 className="text-sm font-bold mb-2 text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-              Event Types ({eventTypeList.length})
+              Event Types ({filteredEvents.length}/{eventTypeList.length})
             </h3>
-            <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1 list-disc list-inside">
-              {eventTypeList.length > 0 ? eventTypeList.map(e => <li key={e} className="break-all">{e}</li>) : <li>None found</li>}
+            <div className="relative mb-2">
+              <input
+                type="text"
+                placeholder="Search events..."
+                value={eventSearch}
+                onChange={e => setEventSearch(e.target.value)}
+                className="w-full pl-7 pr-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <Search size={12} className="absolute left-2 top-2 text-gray-400" />
+            </div>
+            <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1 max-h-40 overflow-y-auto pr-1">
+              {filteredEvents.length > 0 ? filteredEvents.map(e => (
+                <li
+                  key={e}
+                  onClick={() => onGlobalSearchSelect && onGlobalSearchSelect(e)}
+                  className="break-all cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 px-1 rounded transition-colors"
+                  title="Click to filter graph"
+                >
+                  • {e}
+                </li>
+              )) : <li className="text-gray-400 italic px-1">No matches</li>}
             </ul>
           </div>
 
+          {/* Processes List */}
           <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
             <h3 className="text-sm font-bold mb-2 text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-              Processes ({processList.length})
+              Processes ({filteredProcesses.length}/{processList.length})
             </h3>
-            <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
-              {processList.length > 0 ? processList.map(p => (
-                <li key={p.pid} className="border-b border-gray-100 dark:border-gray-700 last:border-0 py-1 flex flex-col">
+            <div className="relative mb-2">
+              <input
+                type="text"
+                placeholder="Search processes..."
+                value={processSearch}
+                onChange={e => setProcessSearch(e.target.value)}
+                className="w-full pl-7 pr-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <Search size={12} className="absolute left-2 top-2 text-gray-400" />
+            </div>
+            <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1 max-h-40 overflow-y-auto pr-1">
+              {filteredProcesses.length > 0 ? filteredProcesses.map(p => (
+                <li
+                  key={p.pid}
+                  onClick={() => onGlobalSearchSelect && onGlobalSearchSelect(p.pid)}
+                  className="border-b border-gray-100 dark:border-gray-700 last:border-0 py-1 px-1 flex flex-col cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 rounded transition-colors"
+                  title="Click to filter graph by PID"
+                >
                   <span className="font-semibold break-all">{p.name}</span>
                   <span className="text-gray-500 dark:text-gray-400 font-mono text-[10px]">PID: {p.pid}</span>
                 </li>
-              )) : <li>None found</li>}
+              )) : <li className="text-gray-400 italic px-1">No matches</li>}
             </ul>
           </div>
         </div>

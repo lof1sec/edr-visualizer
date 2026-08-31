@@ -112,7 +112,7 @@ export const parseEDRLogs = (logs) => {
   };
 
   logs.forEach((log) => {
-    const isCrowdStrike = log.hasOwnProperty('TargetProcessId');
+    const isCrowdStrike = log.hasOwnProperty('#event_simpleName');
     // Normalize basic fields for CS vs MDE
     const evtType = log.ActionType || log.EventName || "UnknownEvent";
 

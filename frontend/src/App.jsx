@@ -166,6 +166,15 @@ function App() {
             nodeData={selectedNodeData}
             rawLogs={rawLogs}
             onClose={() => setSelectedNodeData(null)}
+            onGlobalSearchSelect={(term) => {
+              setGlobalSearch(prev => {
+                const terms = prev.split(',').map(t => t.trim()).filter(Boolean);
+                if (!terms.includes(term)) {
+                  return prev ? `${prev}, ${term}` : term;
+                }
+                return prev; // Don't append if already present
+              });
+            }}
           />
         }
       />

