@@ -62,7 +62,7 @@ export default function RightPanel({ nodeData, onClose }) {
                  {Object.entries(event).map(([key, val]) => {
                    if(val === null || val === undefined || val === '') return null; // Skip empty
                    return (
-                     <tr key={key} className="border-b border-gray-200 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                     <tr key={key} className="border-b border-gray-200 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                        <td className="py-2 pr-2 font-semibold text-gray-600 dark:text-gray-400 w-1/3 align-top break-words">
                          {key}
                        </td>
