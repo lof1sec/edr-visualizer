@@ -217,19 +217,10 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
           // Allow multiple comma-separated search terms
           const searchTerms = searchQuery.toLowerCase().split(',').map(t => t.trim()).filter(t => t !== '');
 
-          // Find matching nodes based on their events data, label, or id
-          const matchingNodes = cy.nodes().filter(node => {
-            const data = node.data();
-
-            // Node matches if ANY of the search terms match (OR logic)
+          const isMatch = (data) => {
             return searchTerms.some(term => {
-              // Check basic properties
-              if (data.id.toLowerCase().includes(term) ||
-                  (data.label && data.label.toLowerCase().includes(term))) {
-                return true;
-              }
-
-              // Check deep inside events
+              if (data.id && data.id.toLowerCase().includes(term)) return true;
+              if (data.label && data.label.toLowerCase().includes(term)) return true;
               if (data.events) {
                  return data.events.some(ev =>
                    Object.values(ev).some(val =>
@@ -239,18 +230,33 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
               }
               return false;
             });
+          };
+
+          // Find explicitly matching nodes and edges
+          const matchingNodes = cy.nodes().filter(node => isMatch(node.data()));
+          const matchingEdges = cy.edges().filter(edge => isMatch(edge.data()));
+
+          // We want to highlight matching elements
+          const toHighlight = cy.collection();
+          toHighlight.merge(matchingNodes);
+          toHighlight.merge(matchingEdges);
+
+          // For any explicitly matched edge, its source and target nodes must be visible for it to render
+          matchingEdges.forEach(edge => {
+            toHighlight.merge(edge.source());
+            toHighlight.merge(edge.target());
           });
 
-          if (matchingNodes.length > 0) {
-            // Highlighting nodes and connected edges as per requirement
-            matchingNodes.addClass('highlighted');
-            matchingNodes.connectedEdges().addClass('highlighted');
-            // Ensure connected nodes are also visible so the edges actually render
-            matchingNodes.connectedEdges().connectedNodes().addClass('highlighted');
+          // For any explicitly matched nodes, we should show edges between them if both ends are matched
+          // so the user sees the relationships of the found items.
+          matchingNodes.edgesWith(matchingNodes).forEach(edge => {
+            toHighlight.merge(edge);
+          });
 
-            // For strings, user asked to "only show the node and edges related"
-            // So instead of just dimming, we hide the unrelated ones
-            cy.elements().not('.highlighted').style('display', 'none');
+          if (toHighlight.length > 0) {
+            toHighlight.addClass('highlighted');
+            // Hide everything that didn't match the strict isolation rules
+            cy.elements().not(toHighlight).style('display', 'none');
           } else {
              cy.elements().style('display', 'none');
           }
