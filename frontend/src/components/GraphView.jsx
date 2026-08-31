@@ -168,12 +168,13 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
     {
       selector: '.highlighted',
       style: {
-        'background-color': highlightColor,
-        'border-color': '#059669',
-        'line-color': highlightColor,
-        'target-arrow-color': highlightColor,
+        // By removing color overrides, nodes retain their group colors.
+        // We just ensure they are visible and on top.
         'opacity': 1,
-        'z-index': 10
+        'z-index': 10,
+        // Optional: slight glowing border or drop shadow could be added here,
+        // but to keep it simple and clean as requested, we just retain original styling
+        'border-width': 4
       }
     },
     {
