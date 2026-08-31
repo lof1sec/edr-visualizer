@@ -214,32 +214,39 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
         cy.elements().removeClass('highlighted dimmed');
 
         if (searchQuery && searchQuery.trim() !== '') {
-          const query = searchQuery.toLowerCase();
+          // Allow multiple comma-separated search terms
+          const searchTerms = searchQuery.toLowerCase().split(',').map(t => t.trim()).filter(t => t !== '');
 
           // Find matching nodes based on their events data, label, or id
           const matchingNodes = cy.nodes().filter(node => {
             const data = node.data();
-            // Check basic properties
-            if (data.id.toLowerCase().includes(query) ||
-                (data.label && data.label.toLowerCase().includes(query))) {
-              return true;
-            }
 
-            // Check deep inside events
-            if (data.events) {
-               return data.events.some(ev =>
-                 Object.values(ev).some(val =>
-                   val !== null && val !== undefined && String(val).toLowerCase().includes(query)
-                 )
-               );
-            }
-            return false;
+            // Node matches if ANY of the search terms match (OR logic)
+            return searchTerms.some(term => {
+              // Check basic properties
+              if (data.id.toLowerCase().includes(term) ||
+                  (data.label && data.label.toLowerCase().includes(term))) {
+                return true;
+              }
+
+              // Check deep inside events
+              if (data.events) {
+                 return data.events.some(ev =>
+                   Object.values(ev).some(val =>
+                     val !== null && val !== undefined && String(val).toLowerCase().includes(term)
+                   )
+                 );
+              }
+              return false;
+            });
           });
 
           if (matchingNodes.length > 0) {
             // Highlighting nodes and connected edges as per requirement
             matchingNodes.addClass('highlighted');
             matchingNodes.connectedEdges().addClass('highlighted');
+            // Ensure connected nodes are also visible so the edges actually render
+            matchingNodes.connectedEdges().connectedNodes().addClass('highlighted');
 
             // For strings, user asked to "only show the node and edges related"
             // So instead of just dimming, we hide the unrelated ones
