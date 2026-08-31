@@ -49,7 +49,9 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
   }, [elements]);
 
   // Styles based on theme
-  const labelColor = isDarkMode ? '#f3f4f6' : '#1f2937';
+  // We use lighter text colors even in light mode because node background colors
+  // (e.g. #4d0000, #00264d) are very dark.
+  const labelColor = isDarkMode ? '#f3f4f6' : '#e5e7eb';
   const defaultEdgeColor = isDarkMode ? '#4b5563' : '#9ca3af';
   const highlightColor = '#10b981'; // Emerald 500 for matching search
   const dimOpacity = 0.15;
