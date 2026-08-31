@@ -210,8 +210,9 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
     if (cyRef.current && elements.length > 0) {
       const cy = cyRef.current;
       cy.batch(() => {
-        // Reset classes
+        // Reset classes and display styles first
         cy.elements().removeClass('highlighted dimmed');
+        cy.elements().style('display', 'element');
 
         if (searchQuery && searchQuery.trim() !== '') {
           // Allow multiple comma-separated search terms

@@ -67,7 +67,17 @@ export default function RightPanel({ nodeData, onClose }) {
                          {key}
                        </td>
                        <td className="py-1 font-mono text-gray-800 dark:text-gray-200 break-all">
-                         {String(val)}
+                         {searchTerm ? (
+                           String(val).split(new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')).map((part, index) =>
+                             part.toLowerCase() === searchTerm.toLowerCase() ? (
+                               <span key={index} className="bg-yellow-500 text-black px-1 rounded">{part}</span>
+                             ) : (
+                               <span key={index}>{part}</span>
+                             )
+                           )
+                         ) : (
+                           String(val)
+                         )}
                        </td>
                      </tr>
                    );
