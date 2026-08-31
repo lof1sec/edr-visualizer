@@ -11,6 +11,7 @@ import { Search, Save } from 'lucide-react';
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [elements, setElements] = useState([]);
+  const [rawLogs, setRawLogs] = useState([]);
   const [selectedNodeData, setSelectedNodeData] = useState(null);
   const [globalSearch, setGlobalSearch] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +25,7 @@ function App() {
       loadGraphData(selectedFile);
     } else {
       setElements([]);
+      setRawLogs([]);
       setSelectedNodeData(null);
     }
   }, [selectedFile]);
@@ -33,6 +35,7 @@ function App() {
     setSelectedNodeData(null);
     try {
       const logs = await fetchFileContent(filename);
+      setRawLogs(logs);
       const graphData = parseEDRLogs(logs);
 
       // Attempt to load saved state
@@ -161,6 +164,7 @@ function App() {
         rightPanel={
           <RightPanel
             nodeData={selectedNodeData}
+            rawLogs={rawLogs}
             onClose={() => setSelectedNodeData(null)}
           />
         }

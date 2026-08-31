@@ -1,13 +1,103 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 
-export default function RightPanel({ nodeData, onClose }) {
+export default function RightPanel({ nodeData, rawLogs, onClose }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   if (!nodeData) {
+    if (!rawLogs || rawLogs.length === 0) {
+      return (
+        <div className="h-full flex items-center justify-center text-gray-400 text-sm italic p-4 text-center">
+          Click on a node in the graph to view its detailed events and properties.
+        </div>
+      );
+    }
+
+    // Aggregate global stats
+    const users = new Set();
+    const processes = new Map(); // pid -> process name
+    const eventTypes = new Set();
+
+    rawLogs.forEach(log => {
+      // Event Type
+      const evt = log.ActionType || log['#event_simpleName'] || log.EventName;
+      if (evt) eventTypes.add(evt);
+
+      // User
+      const user = log.AccountName || log.UserName || log.SubjectUserName;
+      if (user && user.toLowerCase() !== 'system' && !user.endsWith('$')) {
+        users.add(user);
+      }
+
+      // Process
+      const isCrowdStrike = log.hasOwnProperty('TargetProcessId');
+
+      let pid, procName;
+      if (isCrowdStrike) {
+        pid = log.TargetProcessId;
+        procName = log.FileName || log.ImageFileName || "Unknown Process";
+      } else {
+        pid = log.InitiatingProcessId;
+        procName = log.InitiatingProcessFileName || "Unknown Process";
+      }
+
+      if (pid) {
+        // If we don't have a name yet or the current one is unknown
+        if (!processes.has(pid) || processes.get(pid) === "Unknown Process") {
+          processes.set(pid, procName);
+        }
+      }
+
+      // Also check Target process for Defender if applicable (though Initiating is the actor)
+      // or Parent process etc, but sticking to main actor is good for summary.
+    });
+
+    const userList = Array.from(users).sort();
+    const eventTypeList = Array.from(eventTypes).sort();
+    const processList = Array.from(processes.entries()).map(([pid, name]) => ({ pid, name })).sort((a, b) => a.name.localeCompare(b.name));
+
     return (
-      <div className="h-full flex items-center justify-center text-gray-400 text-sm italic p-4 text-center">
-        Click on a node in the graph to view its detailed events and properties.
+      <div className="flex flex-col h-full gap-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-y-auto">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 border-b border-gray-300 dark:border-gray-700 pb-2">
+          Global Log Summary
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 italic mb-2">
+          Select a node in the graph to view its specific details.
+        </p>
+
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-sm font-bold mb-2 text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+              Users ({userList.length})
+            </h3>
+            <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1 list-disc list-inside">
+              {userList.length > 0 ? userList.map(u => <li key={u} className="break-all">{u}</li>) : <li>None found</li>}
+            </ul>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-sm font-bold mb-2 text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+              Event Types ({eventTypeList.length})
+            </h3>
+            <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1 list-disc list-inside">
+              {eventTypeList.length > 0 ? eventTypeList.map(e => <li key={e} className="break-all">{e}</li>) : <li>None found</li>}
+            </ul>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-sm font-bold mb-2 text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+              Processes ({processList.length})
+            </h3>
+            <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
+              {processList.length > 0 ? processList.map(p => (
+                <li key={p.pid} className="border-b border-gray-100 dark:border-gray-700 last:border-0 py-1 flex flex-col">
+                  <span className="font-semibold break-all">{p.name}</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-mono text-[10px]">PID: {p.pid}</span>
+                </li>
+              )) : <li>None found</li>}
+            </ul>
+          </div>
+        </div>
       </div>
     );
   }
