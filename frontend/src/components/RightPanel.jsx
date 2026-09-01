@@ -29,7 +29,7 @@ export default function RightPanel({ nodeData, rawLogs, onClose, exactFilters, o
       if (evt) eventTypes.add(evt);
 
       // User
-      const user = log.AccountName || log.UserName || log.SubjectUserName;
+      const user = log.AccountName || log.UserName || log.SubjectUserName || "Unknown";
       if (user) {
         users.add(user);
       }
