@@ -184,15 +184,29 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
       style: {
         'opacity': dimOpacity
       }
+    },
+    {
+      selector: '.user-hidden',
+      style: {
+        'display': 'none'
+      }
+    },
+    {
+      selector: 'edge:selected',
+      style: {
+        'line-color': '#ef4444',
+        'target-arrow-color': '#ef4444',
+        'width': 4
+      }
     }
   ];
 
   useEffect(() => {
     if (cyRef.current) {
       const cy = cyRef.current;
-      cy.on('tap', 'node', (evt) => {
-        const node = evt.target;
-        onNodeClick(node.data());
+      cy.on('tap', 'node, edge', (evt) => {
+        const ele = evt.target;
+        onNodeClick(ele.data());
       });
 
       // Free movement is enabled by default in react-cytoscapejs
@@ -214,7 +228,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
       cy.batch(() => {
         // Reset classes and display styles first
         cy.elements().removeClass('highlighted dimmed');
-        cy.elements().style('display', 'element');
+        cy.elements().not('.user-hidden').style('display', 'element');
 
         if (searchQuery && searchQuery.trim() !== '') {
           // Allow multiple comma-separated search terms
@@ -265,7 +279,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
           }
         } else {
           // If no search query, ensure everything is visible
-          cy.elements().style('display', 'element');
+          cy.elements().not('.user-hidden').style('display', 'element');
         }
       });
     }
@@ -318,6 +332,34 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
           title="Toggle Layout"
         >
           🔄 Layout
+        </button>
+        <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 self-center mx-1"></div>
+        <button
+          onClick={() => {
+            if (cyRef.current) {
+              const selected = cyRef.current.$(':selected');
+              if (selected.length > 0) {
+                selected.addClass('user-hidden');
+                selected.unselect();
+                onNodeClick(null); // Clear right panel since element is now hidden
+              }
+            }
+          }}
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 rounded shadow text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-red-600 dark:text-red-400"
+          title="Hide Selected Elements"
+        >
+          👁️‍🗨️ Hide
+        </button>
+        <button
+          onClick={() => {
+            if (cyRef.current) {
+              cyRef.current.elements().removeClass('user-hidden');
+            }
+          }}
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 rounded shadow text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-green-600 dark:text-green-400"
+          title="Show All Hidden Elements"
+        >
+          👁️ Show All
         </button>
       </div>
     </div>

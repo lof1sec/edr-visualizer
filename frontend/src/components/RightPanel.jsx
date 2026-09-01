@@ -178,12 +178,15 @@ export default function RightPanel({ nodeData, rawLogs, onClose, onGlobalSearchS
     );
   });
 
+  const isEdge = !!nodeData.source && !!nodeData.target;
+
   return (
     <div className="flex flex-col h-full gap-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
       <div className="flex justify-between items-start border-b border-gray-300 dark:border-gray-700 pb-4">
         <div>
           <h2 className="text-xl font-bold break-all text-blue-700 dark:text-blue-400">{label}</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">PID: {id}</p>
+          {!isEdge && <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">PID: {id}</p>}
+          {isEdge && <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">Edge ID: {id}</p>}
           {timestamp && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">First Seen: {timestamp}</p>}
         </div>
         <button onClick={onClose} className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 p-1 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm">
