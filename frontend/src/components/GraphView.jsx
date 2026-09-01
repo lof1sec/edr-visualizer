@@ -266,7 +266,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery, exactFil
                 let processMatches = true;
 
                 if (exactFilters.users && exactFilters.users.length > 0) {
-                  const evUser = ev.AccountName || ev.UserName || ev.SubjectUserName || "Unknown";
+                  const evUser = ev.AccountName || ev.InitiatingProcessAccountName || ev.UserName || ev.SubjectUserName || "Unknown";
                   userMatches = exactFilters.users.includes(evUser);
                 }
                 if (exactFilters.eventTypes && exactFilters.eventTypes.length > 0) {

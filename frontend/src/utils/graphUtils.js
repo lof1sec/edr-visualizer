@@ -129,8 +129,8 @@ export const parseEDRLogs = (logs) => {
       actorName = log.InitiatingProcessFileName;
       targetId = log.ProcessId;
       targetName = log.FileName;
-      domain = log.AccountDomain || "";
-      user = log.AccountName || "Unknown";
+      domain = log.AccountDomain || log.InitiatingProcessAccountDomain || "";
+      user = log.AccountName || log.InitiatingProcessAccountName || "Unknown";
       username = domain && user !== "Unknown" ? `${domain}\\${user}` : user;
     }
 
