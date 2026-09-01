@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 
-export default function RightPanel({ nodeData, rawLogs, onClose, onGlobalSearchSelect }) {
+export default function RightPanel({ nodeData, rawLogs, onClose, exactFilters, onExactFilterSelect }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Local search states for global summary lists
@@ -91,16 +91,19 @@ export default function RightPanel({ nodeData, rawLogs, onClose, onGlobalSearchS
               <Search size={12} className="absolute left-2 top-2 text-gray-400" />
             </div>
             <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1 max-h-40 overflow-y-auto pr-1">
-              {filteredUsers.length > 0 ? filteredUsers.map(u => (
-                <li
-                  key={u}
-                  onClick={() => onGlobalSearchSelect && onGlobalSearchSelect(u)}
-                  className="break-all cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 px-1 rounded transition-colors"
-                  title="Click to filter graph"
-                >
-                  • {u}
-                </li>
-              )) : <li className="text-gray-400 italic px-1">No matches</li>}
+              {filteredUsers.length > 0 ? filteredUsers.map(u => {
+                const isActive = exactFilters?.users?.includes(u);
+                return (
+                  <li
+                    key={u}
+                    onClick={() => onExactFilterSelect && onExactFilterSelect('users', u)}
+                    className={`break-all cursor-pointer px-1 rounded transition-colors ${isActive ? 'bg-blue-200 dark:bg-blue-900 font-bold' : 'hover:bg-blue-50 dark:hover:bg-gray-700'}`}
+                    title={isActive ? "Click to remove filter" : "Click to filter graph exactly by this user"}
+                  >
+                    • {u}
+                  </li>
+                );
+              }) : <li className="text-gray-400 italic px-1">No matches</li>}
             </ul>
           </div>
 
@@ -120,16 +123,19 @@ export default function RightPanel({ nodeData, rawLogs, onClose, onGlobalSearchS
               <Search size={12} className="absolute left-2 top-2 text-gray-400" />
             </div>
             <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1 max-h-40 overflow-y-auto pr-1">
-              {filteredEvents.length > 0 ? filteredEvents.map(e => (
-                <li
-                  key={e}
-                  onClick={() => onGlobalSearchSelect && onGlobalSearchSelect(e)}
-                  className="break-all cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 px-1 rounded transition-colors"
-                  title="Click to filter graph"
-                >
-                  • {e}
-                </li>
-              )) : <li className="text-gray-400 italic px-1">No matches</li>}
+              {filteredEvents.length > 0 ? filteredEvents.map(e => {
+                const isActive = exactFilters?.eventTypes?.includes(e);
+                return (
+                  <li
+                    key={e}
+                    onClick={() => onExactFilterSelect && onExactFilterSelect('eventTypes', e)}
+                    className={`break-all cursor-pointer px-1 rounded transition-colors ${isActive ? 'bg-blue-200 dark:bg-blue-900 font-bold' : 'hover:bg-blue-50 dark:hover:bg-gray-700'}`}
+                    title={isActive ? "Click to remove filter" : "Click to filter graph exactly by this event type"}
+                  >
+                    • {e}
+                  </li>
+                );
+              }) : <li className="text-gray-400 italic px-1">No matches</li>}
             </ul>
           </div>
 
@@ -149,17 +155,20 @@ export default function RightPanel({ nodeData, rawLogs, onClose, onGlobalSearchS
               <Search size={12} className="absolute left-2 top-2 text-gray-400" />
             </div>
             <ul className="text-xs text-gray-700 dark:text-gray-300 space-y-1 max-h-40 overflow-y-auto pr-1">
-              {filteredProcesses.length > 0 ? filteredProcesses.map(p => (
-                <li
-                  key={p.pid}
-                  onClick={() => onGlobalSearchSelect && onGlobalSearchSelect(p.pid)}
-                  className="border-b border-gray-100 dark:border-gray-700 last:border-0 py-1 px-1 flex flex-col cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 rounded transition-colors"
-                  title="Click to filter graph by PID"
-                >
-                  <span className="font-semibold break-all">{p.name}</span>
-                  <span className="text-gray-500 dark:text-gray-400 font-mono text-[10px]">PID: {p.pid}</span>
-                </li>
-              )) : <li className="text-gray-400 italic px-1">No matches</li>}
+              {filteredProcesses.length > 0 ? filteredProcesses.map(p => {
+                const isActive = exactFilters?.processes?.includes(p.pid);
+                return (
+                  <li
+                    key={p.pid}
+                    onClick={() => onExactFilterSelect && onExactFilterSelect('processes', p.pid)}
+                    className={`border-b border-gray-100 dark:border-gray-700 last:border-0 py-1 px-1 flex flex-col cursor-pointer rounded transition-colors ${isActive ? 'bg-blue-200 dark:bg-blue-900' : 'hover:bg-blue-50 dark:hover:bg-gray-700'}`}
+                    title={isActive ? "Click to remove filter" : "Click to filter graph exactly by this PID"}
+                  >
+                    <span className={`font-semibold break-all ${isActive ? 'font-bold' : ''}`}>{p.name}</span>
+                    <span className="text-gray-500 dark:text-gray-400 font-mono text-[10px]">PID: {p.pid}</span>
+                  </li>
+                );
+              }) : <li className="text-gray-400 italic px-1">No matches</li>}
             </ul>
           </div>
         </div>

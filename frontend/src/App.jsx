@@ -14,6 +14,7 @@ function App() {
   const [rawLogs, setRawLogs] = useState([]);
   const [selectedNodeData, setSelectedNodeData] = useState(null);
   const [globalSearch, setGlobalSearch] = useState('');
+  const [exactFilters, setExactFilters] = useState({ users: [], eventTypes: [], processes: [] });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -27,6 +28,7 @@ function App() {
       setElements([]);
       setRawLogs([]);
       setSelectedNodeData(null);
+      setExactFilters({ users: [], eventTypes: [], processes: [] });
     }
   }, [selectedFile]);
 
@@ -43,6 +45,11 @@ function App() {
         const savedState = await loadSessionState(filename);
         if (savedState) {
           setGlobalSearch(savedState.searchQuery || '');
+          if (savedState.exactFilters) {
+            setExactFilters(savedState.exactFilters);
+          } else {
+            setExactFilters({ users: [], eventTypes: [], processes: [] });
+          }
           // If positions are saved, we can merge them into elements
           if (savedState.positions) {
             graphData.elements.forEach(el => {
@@ -82,6 +89,7 @@ function App() {
 
       const stateToSave = {
         searchQuery: globalSearch,
+        exactFilters: exactFilters,
         positions: positions
       };
 
@@ -155,6 +163,7 @@ function App() {
                 elements={elements}
                 onNodeClick={handleNodeClick}
                 searchQuery={globalSearch}
+                exactFilters={exactFilters}
               />
             )}
           </div>
@@ -164,13 +173,17 @@ function App() {
             nodeData={selectedNodeData}
             rawLogs={rawLogs}
             onClose={() => setSelectedNodeData(null)}
-            onGlobalSearchSelect={(term) => {
-              setGlobalSearch(prev => {
-                const terms = prev.split(',').map(t => t.trim()).filter(Boolean);
-                if (!terms.includes(term)) {
-                  return prev ? `${prev}, ${term}` : term;
+            exactFilters={exactFilters}
+            onExactFilterSelect={(type, value) => {
+              setExactFilters(prev => {
+                const currentList = prev[type] || [];
+                if (currentList.includes(value)) {
+                  // Toggle off
+                  return { ...prev, [type]: currentList.filter(v => v !== value) };
+                } else {
+                  // Toggle on
+                  return { ...prev, [type]: [...currentList, value] };
                 }
-                return prev; // Don't append if already present
               });
             }}
           />

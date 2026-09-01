@@ -6,7 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 
 cytoscape.use(coseBilkent);
 
-export default function GraphView({ elements, onNodeClick, searchQuery }) {
+export default function GraphView({ elements, onNodeClick, searchQuery, exactFilters }) {
   const { isDarkMode } = useTheme();
   const cyRef = useRef(null);
 
@@ -221,7 +221,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
     }
   }, [cyRef, onNodeClick]);
 
-  // Apply search highlighting
+  // Apply search highlighting and exact filtering
   useEffect(() => {
     if (cyRef.current && elements.length > 0) {
       const cy = cyRef.current;
@@ -230,23 +230,64 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
         cy.elements().removeClass('highlighted dimmed');
         cy.elements().not('.user-hidden').style('display', 'element');
 
-        if (searchQuery && searchQuery.trim() !== '') {
-          // Allow multiple comma-separated search terms
-          const searchTerms = searchQuery.toLowerCase().split(',').map(t => t.trim()).filter(t => t !== '');
+        const hasTextSearch = searchQuery && searchQuery.trim() !== '';
+        const hasExactFilters = exactFilters && (
+          (exactFilters.users && exactFilters.users.length > 0) ||
+          (exactFilters.eventTypes && exactFilters.eventTypes.length > 0) ||
+          (exactFilters.processes && exactFilters.processes.length > 0)
+        );
+
+        if (hasTextSearch || hasExactFilters) {
+          const searchTerms = hasTextSearch ? searchQuery.toLowerCase().split(',').map(t => t.trim()).filter(t => t !== '') : [];
 
           const isMatch = (data) => {
-            return searchTerms.some(term => {
-              if (data.id && data.id.toLowerCase().includes(term)) return true;
-              if (data.label && data.label.toLowerCase().includes(term)) return true;
-              if (data.events) {
-                 return data.events.some(ev =>
-                   Object.values(ev).some(val =>
-                     val !== null && val !== undefined && String(val).toLowerCase().includes(term)
-                   )
-                 );
-              }
-              return false;
-            });
+            let textMatch = !hasTextSearch; // If no text search, consider it matched for text
+            let exactMatch = !hasExactFilters; // If no exact filters, consider it matched for exact
+
+            if (hasTextSearch) {
+              textMatch = searchTerms.some(term => {
+                if (data.id && data.id.toLowerCase().includes(term)) return true;
+                if (data.label && data.label.toLowerCase().includes(term)) return true;
+                if (data.events) {
+                   return data.events.some(ev =>
+                     Object.values(ev).some(val =>
+                       val !== null && val !== undefined && String(val).toLowerCase().includes(term)
+                     )
+                   );
+                }
+                return false;
+              });
+            }
+
+            if (hasExactFilters && data.events) {
+              exactMatch = data.events.some(ev => {
+                let userMatches = true;
+                let eventTypeMatches = true;
+                let processMatches = true;
+
+                if (exactFilters.users && exactFilters.users.length > 0) {
+                  const evUser = ev.AccountName || ev.UserName || ev.SubjectUserName || null;
+                  userMatches = exactFilters.users.includes(evUser);
+                }
+                if (exactFilters.eventTypes && exactFilters.eventTypes.length > 0) {
+                  const evType = ev.ActionType || ev.EventName || ev['#event_simpleName'] || null;
+                  eventTypeMatches = exactFilters.eventTypes.includes(evType);
+                }
+                if (exactFilters.processes && exactFilters.processes.length > 0) {
+                  const evProc = ev.TargetProcessId || ev.ProcessId || ev.InitiatingProcessId || ev.ContextProcessId || null;
+                  // Handle PID as string since IDs can be strings
+                  processMatches = exactFilters.processes.some(pid => String(pid) === String(evProc));
+                }
+
+                // Node is kept if it matches all applied exact filters
+                return userMatches && eventTypeMatches && processMatches;
+              });
+            } else if (hasExactFilters && !data.events) {
+              // If it has no events, it cannot match exact event properties
+              exactMatch = false;
+            }
+
+            return textMatch && exactMatch;
           };
 
           // Find explicitly matching nodes and edges
@@ -278,12 +319,12 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
              cy.elements().style('display', 'none');
           }
         } else {
-          // If no search query, ensure everything is visible
+          // If no filters, ensure everything is visible
           cy.elements().not('.user-hidden').style('display', 'element');
         }
       });
     }
-  }, [searchQuery, elements]);
+  }, [searchQuery, exactFilters, elements]);
 
 
   if (!elements || elements.length === 0) {
