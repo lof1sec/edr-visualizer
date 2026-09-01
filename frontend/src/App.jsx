@@ -103,6 +103,26 @@ function App() {
     <ThemeProvider>
       <Layout
         forceRightOpen={!!selectedNodeData}
+        headerCenter={
+          <div className="relative w-full shadow-sm rounded-full">
+            <input
+              type="text"
+              placeholder="Search strings, numerical values, IPs in graph..."
+              value={globalSearch}
+              onChange={e => setGlobalSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner text-gray-900 dark:text-gray-100"
+            />
+            <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+            {globalSearch && (
+              <button
+                onClick={() => setGlobalSearch('')}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        }
         sidebar={
           <Sidebar
             onSelectFile={setSelectedFile}
@@ -125,28 +145,6 @@ function App() {
                 </button>
               </div>
             )}
-
-            {/* Global Search Bar Overlay */}
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 w-96 max-w-[90%] shadow-lg rounded-full">
-               <div className="relative">
-                 <input
-                   type="text"
-                   placeholder="Search strings, numerical values, IPs in graph..."
-                   value={globalSearch}
-                   onChange={e => setGlobalSearch(e.target.value)}
-                   className="w-full pl-10 pr-4 py-3 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-                 />
-                 <Search size={16} className="absolute left-4 top-3.5 text-gray-400" />
-                 {globalSearch && (
-                   <button
-                     onClick={() => setGlobalSearch('')}
-                     className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                   >
-                     ✕
-                   </button>
-                 )}
-               </div>
-            </div>
 
             {isLoading ? (
               <div className="w-full h-full flex items-center justify-center">
