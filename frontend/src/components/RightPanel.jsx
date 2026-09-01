@@ -63,7 +63,7 @@ export default function RightPanel({ nodeData, rawLogs, onClose, exactFilters, o
 
     const filteredUsers = userList.filter(u => u.toLowerCase().includes(userSearch.toLowerCase()));
     const filteredEvents = eventTypeList.filter(e => e.toLowerCase().includes(eventSearch.toLowerCase()));
-    const filteredProcesses = processList.filter(p => p.name.toLowerCase().includes(processSearch.toLowerCase()) || p.pid.includes(processSearch));
+    const filteredProcesses = processList.filter(p => p.name.toLowerCase().includes(processSearch.toLowerCase()) || String(p.pid).includes(processSearch));
 
     return (
       <div className="flex flex-col h-full gap-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-y-auto">

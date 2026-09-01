@@ -2,32 +2,33 @@ import React, { useRef, useEffect, useState } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
 import cytoscape from 'cytoscape';
 import coseBilkent from 'cytoscape-cose-bilkent';
+import fcose from 'cytoscape-fcose';
 import { useTheme } from '../context/ThemeContext';
 
 cytoscape.use(coseBilkent);
+cytoscape.use(fcose);
 
 export default function GraphView({ elements, onNodeClick, searchQuery, exactFilters }) {
   const { isDarkMode } = useTheme();
   const cyRef = useRef(null);
 
-  // Physics-based physics layout config
-  const coseLayoutConfig = {
-    name: 'cose-bilkent',
-    animate: 'end',
-    animationEasing: 'ease-out',
+  // High-performance, organic physics-based layout ideal for graphs with hubs (like EDR logs)
+  const fcoseLayoutConfig = {
+    name: 'fcose',
+    animate: true,
     animationDuration: 1000,
+    animationEasing: 'ease-out',
     randomize: true,
-    nodeRepulsion: 4500,
-    idealEdgeLength: 100,
-    edgeElasticity: 0.45,
+    quality: 'default',
+    nodeSeparation: 75,
+    idealEdgeLength: edge => 50,
+    edgeElasticity: edge => 0.45,
     nestingFactor: 0.1,
     gravity: 0.25,
     numIter: 2500,
     tile: true,
     tilingPaddingVertical: 10,
     tilingPaddingHorizontal: 10,
-    gravityRangeCompound: 1.5,
-    gravityCompound: 1.0,
     gravityRange: 3.8
   };
 
@@ -48,9 +49,9 @@ export default function GraphView({ elements, onNodeClick, searchQuery, exactFil
   };
 
   // If elements have pre-saved positions (from App.jsx), we should use 'preset' layout
-  // otherwise, default to 'concentric' for sphere style
+  // otherwise, default to 'fcose' for an organic, non-overlapping cluster style
   const hasPositions = elements.some(el => el.position);
-  const defaultLayout = hasPositions ? { name: 'preset' } : concentricLayoutConfig;
+  const defaultLayout = hasPositions ? { name: 'preset' } : fcoseLayoutConfig;
 
   const [layout, setLayout] = useState(defaultLayout);
 
@@ -60,7 +61,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery, exactFil
     if (newHasPositions) {
        setLayout({ name: 'preset' });
     } else {
-       setLayout(concentricLayoutConfig);
+       setLayout(fcoseLayoutConfig);
     }
   }, [elements]);
 
@@ -98,101 +99,66 @@ export default function GraphView({ elements, onNodeClick, searchQuery, exactFil
     {
       selector: 'node[group="process"]',
       style: {
-        'background-color': '#4d0000',
-        'border-color': '#ff4d4d',
-        'shape': 'rectangle'
+        'background-color': '#00264d',
+        'border-color': '#66b3ff',
       }
     },
     {
       selector: 'node[group="file"]',
       style: {
-        'background-color': '#00264d',
-        'border-color': '#4da6ff',
-        'shape': 'rectangle'
-      }
-    },
-    {
-      selector: 'node[group="module"]',
-      style: {
-        'background-color': '#4d0099',
-        'border-color': '#b366ff',
-        'shape': 'hexagon',
-        'padding': '15px'
-      }
-    },
-    {
-      selector: 'node[group="registry"]',
-      style: {
-        'background-color': '#804000',
-        'border-color': '#ff9933',
-        'shape': 'rectangle'
+        'background-color': '#4d4d00',
+        'border-color': '#ffff66',
+        'shape': 'ellipse',
       }
     },
     {
       selector: 'node[group="network"]',
       style: {
-        'background-color': '#003333',
-        'border-color': '#00ffff',
-        'shape': 'rectangle'
-      }
-    },
-    {
-      selector: 'node[group="commandline"]',
-      style: {
-        'background-color': '#332b00',
-        'border-color': '#ffcc00',
-        'border-width': 1,
-        'shape': 'rectangle'
-      }
-    },
-    {
-      selector: 'node[group="alert"]',
-      style: {
-        'background-color': '#b30000',
-        'border-color': '#ff0000',
-        'border-width': 3,
-        'shape': 'star',
-        'padding': '20px'
-      }
-    },
-    {
-      selector: 'node:selected',
-      style: {
-        'border-width': 4,
-        'border-color': '#ef4444' // Red for selected
+        'background-color': '#004d00',
+        'border-color': '#66ff66',
+        'shape': 'hexagon',
       }
     },
     {
       selector: 'edge',
       style: {
         'width': 2,
-        'line-color': 'data(color)',
-        'target-arrow-color': 'data(color)',
+        'line-color': defaultEdgeColor,
+        'target-arrow-color': defaultEdgeColor,
         'target-arrow-shape': 'triangle',
         'curve-style': 'bezier',
+        'opacity': 0.6,
         'label': 'data(label)',
         'font-size': '10px',
         'color': labelColor,
         'text-background-color': isDarkMode ? '#1f2937' : '#ffffff',
         'text-background-opacity': 0.7,
         'text-background-padding': '2px',
-        'line-style': (ele) => ele.data('dashed') ? 'dashed' : 'solid',
-        'opacity': 0.8,
-        'transition-property': 'line-color, opacity',
+        'transition-property': 'line-color, target-arrow-color, opacity, width',
         'transition-duration': '0.2s'
       }
     },
-    // Search classes
+    // Interaction States
+    {
+      selector: 'node:selected',
+      style: {
+        'border-width': 4,
+        'border-color': '#ffffff',
+        'background-color': '#737373',
+      }
+    },
     {
       selector: '.highlighted',
       style: {
-        // By removing color overrides, nodes retain their group colors.
-        // We just ensure they are visible and on top.
+        'background-color': highlightColor,
+        'line-color': highlightColor,
+        'target-arrow-color': highlightColor,
+        'border-color': highlightColor,
+        'color': '#ffffff',
+        'border-width': 4,
+        'z-index': 100,
         'opacity': 1,
-        'z-index': 10,
-        // Optional: slight glowing border or drop shadow could be added here,
-        // but to keep it simple and clean as requested, we just retain original styling
-        'border-width': 4
+        'text-background-opacity': 1
       }
     },
     {
@@ -206,29 +172,38 @@ export default function GraphView({ elements, onNodeClick, searchQuery, exactFil
       style: {
         'display': 'none'
       }
-    },
-    {
-      selector: 'edge:selected',
-      style: {
-        'line-color': '#ef4444',
-        'target-arrow-color': '#ef4444',
-        'width': 4
-      }
     }
   ];
 
+  // Handle selection events for clicking
   useEffect(() => {
     if (cyRef.current) {
       const cy = cyRef.current;
-      cy.on('tap', 'node, edge', (evt) => {
-        const ele = evt.target;
-        onNodeClick(ele.data());
+      cy.on('tap', 'node', (evt) => {
+        const node = evt.target;
+        if (onNodeClick) {
+          onNodeClick(node.data());
+        }
       });
 
-      // Free movement is enabled by default in react-cytoscapejs
-      // Highlight on hover
+      cy.on('tap', 'edge', (evt) => {
+         const edge = evt.target;
+         if (onNodeClick) {
+            onNodeClick(edge.data());
+         }
+      });
+
+      cy.on('tap', (evt) => {
+        if (evt.target === cy) {
+          // Clicked on background
+          if (onNodeClick) {
+            onNodeClick(null);
+          }
+        }
+      });
+
+      // Hover cursors
       cy.on('mouseover', 'node', (e) => {
-         // Create a simple tooltip effect or handle internally
          document.body.style.cursor = 'pointer';
       });
       cy.on('mouseout', 'node', (e) => {
@@ -382,12 +357,12 @@ export default function GraphView({ elements, onNodeClick, searchQuery, exactFil
         <button
           onClick={() => {
              let newLayout;
-             if (layout.name === 'concentric') {
-               newLayout = coseLayoutConfig;
-             } else if (layout.name === 'cose-bilkent') {
+             if (layout.name === 'fcose') {
+               newLayout = concentricLayoutConfig;
+             } else if (layout.name === 'concentric') {
                newLayout = { name: 'breadthfirst', directed: true, spacingFactor: 1.5 };
              } else {
-               newLayout = concentricLayoutConfig;
+               newLayout = fcoseLayoutConfig;
              }
              setLayout(newLayout);
              if (cyRef.current) cyRef.current.layout(newLayout).run();
@@ -424,19 +399,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery, exactFil
               if (!searchQuery || searchQuery.trim() === '') {
                  hidden.style('display', 'element');
               } else {
-                 // Trigger the search effect to evaluate their visibility if a search is active
-                 // Easiest way is to remove their display style and let Cytoscape/React handle it
-                 // when the next search effect runs, but we can also just trigger a dummy update.
-                 // Actually, removing display style might not evaluate it immediately.
-                 // We will set to 'element' and rely on search to refine it.
                  hidden.style('display', 'element');
-
-                 // If we want it to immediately reflect search, we could just trigger
-                 // a re-render or re-evaluation. Since they were hidden, making them 'element'
-                 // might show them incorrectly if they don't match the search.
-                 // To fix this cleanly, we can trigger the search logic again, but since
-                 // we don't have direct access to it here, setting display to 'element' will show them.
-                 // Since they were part of the search results anyway (or not), it's acceptable.
               }
             }
           }}
