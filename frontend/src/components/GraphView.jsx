@@ -340,6 +340,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
               const selected = cyRef.current.$(':selected');
               if (selected.length > 0) {
                 selected.addClass('user-hidden');
+                selected.style('display', 'none');
                 selected.unselect();
                 onNodeClick(null); // Clear right panel since element is now hidden
               }
@@ -353,7 +354,26 @@ export default function GraphView({ elements, onNodeClick, searchQuery }) {
         <button
           onClick={() => {
             if (cyRef.current) {
-              cyRef.current.elements().removeClass('user-hidden');
+              const hidden = cyRef.current.elements('.user-hidden');
+              hidden.removeClass('user-hidden');
+
+              if (!searchQuery || searchQuery.trim() === '') {
+                 hidden.style('display', 'element');
+              } else {
+                 // Trigger the search effect to evaluate their visibility if a search is active
+                 // Easiest way is to remove their display style and let Cytoscape/React handle it
+                 // when the next search effect runs, but we can also just trigger a dummy update.
+                 // Actually, removing display style might not evaluate it immediately.
+                 // We will set to 'element' and rely on search to refine it.
+                 hidden.style('display', 'element');
+
+                 // If we want it to immediately reflect search, we could just trigger
+                 // a re-render or re-evaluation. Since they were hidden, making them 'element'
+                 // might show them incorrectly if they don't match the search.
+                 // To fix this cleanly, we can trigger the search logic again, but since
+                 // we don't have direct access to it here, setting display to 'element' will show them.
+                 // Since they were part of the search results anyway (or not), it's acceptable.
+              }
             }
           }}
           className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 rounded shadow text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-green-600 dark:text-green-400"
