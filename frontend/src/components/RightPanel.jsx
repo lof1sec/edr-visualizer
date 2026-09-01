@@ -30,7 +30,7 @@ export default function RightPanel({ nodeData, rawLogs, onClose, exactFilters, o
 
       // User
       const user = log.AccountName || log.UserName || log.SubjectUserName;
-      if (user && user.toLowerCase() !== 'system' && !user.endsWith('$')) {
+      if (user) {
         users.add(user);
       }
 
