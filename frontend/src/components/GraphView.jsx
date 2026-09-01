@@ -31,10 +31,26 @@ export default function GraphView({ elements, onNodeClick, searchQuery, exactFil
     gravityRange: 3.8
   };
 
+  // Concentric layout config (Sphere style)
+  const concentricLayoutConfig = {
+    name: 'concentric',
+    avoidOverlap: true,
+    minNodeSpacing: 50,
+    concentric: function(node) {
+      return node.degree(); // Higher degree nodes in center
+    },
+    levelWidth: function(nodes) {
+      return 2;
+    },
+    animate: true,
+    animationDuration: 500,
+    padding: 30
+  };
+
   // If elements have pre-saved positions (from App.jsx), we should use 'preset' layout
-  // otherwise, default to 'cose-bilkent' for physics
+  // otherwise, default to 'concentric' for sphere style
   const hasPositions = elements.some(el => el.position);
-  const defaultLayout = hasPositions ? { name: 'preset' } : coseLayoutConfig;
+  const defaultLayout = hasPositions ? { name: 'preset' } : concentricLayoutConfig;
 
   const [layout, setLayout] = useState(defaultLayout);
 
@@ -44,7 +60,7 @@ export default function GraphView({ elements, onNodeClick, searchQuery, exactFil
     if (newHasPositions) {
        setLayout({ name: 'preset' });
     } else {
-       setLayout(coseLayoutConfig);
+       setLayout(concentricLayoutConfig);
     }
   }, [elements]);
 
@@ -365,7 +381,14 @@ export default function GraphView({ elements, onNodeClick, searchQuery, exactFil
         </button>
         <button
           onClick={() => {
-             const newLayout = layout.name === 'cose-bilkent' ? { name: 'breadthfirst', directed: true, spacingFactor: 1.5 } : coseLayoutConfig;
+             let newLayout;
+             if (layout.name === 'concentric') {
+               newLayout = coseLayoutConfig;
+             } else if (layout.name === 'cose-bilkent') {
+               newLayout = { name: 'breadthfirst', directed: true, spacingFactor: 1.5 };
+             } else {
+               newLayout = concentricLayoutConfig;
+             }
              setLayout(newLayout);
              if (cyRef.current) cyRef.current.layout(newLayout).run();
           }}
